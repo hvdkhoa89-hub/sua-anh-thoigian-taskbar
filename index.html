@@ -502,6 +502,9 @@
 
             <!-- RIGHT COLUMN (Preview Result) -->
             <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                <style>@keyframes blinkRedText { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }</style>
+                <div id="costNotification" style="display: none; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px; color: #b91c1c; font-weight: bold; text-align: center; margin-bottom: 16px; font-size: 1rem; animation: blinkRedText 1s linear infinite;"></div>
+
                 <div class="preview-section hidden" id="previewContainer" style="margin: 0; width: 100%; height: 100%; padding: 0; background: transparent; box-shadow: none;">
                     <div class="canvas-container" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; display: flex; justify-content: center; align-items: center; padding: 0;">
                         <canvas id="canvas" style="max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; border-radius: 4px; transition: width 0.2s ease-out; display: block;"></canvas>
@@ -1526,6 +1529,17 @@
             
             // Scroll nhẹ xuống để người dùng thấy ảnh
             previewContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            
+            // Hiển thị thông báo xử lý ảnh thành công
+            const costNotif = document.getElementById('costNotification');
+            if (costNotif) {
+                costNotif.textContent = "Xử lý ảnh thành công!";
+                costNotif.style.color = '#b91c1c'; // Chữ màu đỏ
+                costNotif.style.backgroundColor = '#fee2e2'; 
+                costNotif.style.borderColor = '#fca5a5';
+                costNotif.style.display = 'block';
+                setTimeout(() => { costNotif.style.display = 'none'; }, 5000);
+            }
         });
 
         // Xử lý tải ảnh xuống
@@ -1549,7 +1563,16 @@
                     });
                     userCredits--;
                     updateCreditDisplay();
-                    alert("Đã trừ 1 điểm phí tải ảnh.");
+                    
+                    const costNotif = document.getElementById('costNotification');
+                    if (costNotif) {
+                        costNotif.textContent = "Đã trừ 1 điểm phí tải ảnh.";
+                        costNotif.style.color = '#b91c1c';
+                        costNotif.style.backgroundColor = '#fee2e2';
+                        costNotif.style.borderColor = '#fca5a5';
+                        costNotif.style.display = 'block';
+                        setTimeout(() => { costNotif.style.display = 'none'; }, 5000);
+                    }
                 } catch(e) {
                     console.error(e);
                     alert("Đã có lỗi xảy ra khi trừ điểm. Vui lòng thử lại!");
