@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Khắc phục hoàn toàn lỗi "Cannot set property fetch of #<Window> which has only a getter"
+        // Lỗi này thường do môi trường chạy (như iframe, browser extension) hoặc polyfill cố gắng ghi đè fetch.
+        try {
+            const originalFetch = window.fetch;
+            Object.defineProperty(window, 'fetch', {
+                get: function() { return originalFetch; },
+                set: function(newFetch) { 
+                    // Cung cấp một setter ẩn để không bị báo lỗi "only a getter"
+                    // Phớt lờ việc gán đè nếu không cần thiết, hoặc cập nhật logic ngầm.
+                    Object.defineProperty(window, 'fetch', { value: newFetch, writable: true, configurable: true });
+                },
+                configurable: true
+            });
+        } catch (e) {
+            console.warn("Unable to monkey-patch fetch setter to prevent error:", e);
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa Thời Gian Taskbar Windows 11</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #0f172a;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --success: #059669;
+            --success-hover: #047857;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #d4af37; /* màu vàng đồng */
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            background-color: #f1f5f9;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: #e2e8f0;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-label svg {
+            width: 32px;
+            height: 32px;
+            color: #64748b;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .inputs-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 2px;
+        }
+
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            height: 38px;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: var(--success-hover);
+        }
+
+        .btn-success:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .preview-section {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .canvas-container {
+            width: 100%;
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background-color: #f8fafc;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            object-fit: contain;
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Styling cho Auth Input */
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            background: #f8fafc;
+        }
+        .auth-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            background: #ffffff;
+        }
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-container input {
+            padding-right: 48px;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle:hover {
+            color: #334155;
+        }
+
+        #auth-message {
+            display: none;
+            text-align: center;
+            font-size: 0.95rem;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .error-msg {
+            color: #b91c1c;
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+        .success-msg {
+            color: #15803d;
+            background-color: #dcfce7;
+            border: 1px solid #86efac;
+        }
+    </style>
+    <!-- V9 Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-section" class="card" style="max-width: 400px; margin: 40px auto; padding: 32px;">
+        
+        <p id="auth-message"></p>
+        
+        <!-- LOGIN VIEW -->
+        <div id="login-view" style="transition: opacity 0.3s ease-in-out;">
+            <h2 style="text-align: center; color: #0f172a; margin-top: 0; margin-bottom: 24px;">Đăng Nhập</h2>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="loginEmail" style="margin-bottom: 8px; display: block;">Tài khoản / Email</label>
+                <input type="text" id="loginEmail" class="auth-input" placeholder="Nhập tài khoản hoặc email của bạn...">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="loginPassword" style="margin-bottom: 8px; display: block;">Mật khẩu</label>
+                <div class="password-container">
+                    <input type="password" id="loginPassword" class="auth-input" placeholder="Nhập mật khẩu...">
+                    <button type="button" class="password-toggle" id="togglePassword" title="Hiển thị mật khẩu">👁️</button>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 24px; cursor: pointer;" onclick="document.getElementById('rememberMe').click();">
+                <input type="checkbox" id="rememberMe" style="cursor: pointer; margin: 0; width: 16px; height: 16px;" onclick="event.stopPropagation()">
+                <label for="rememberMe" style="margin-left: 8px; font-size: 0.95rem; color: #475569; cursor: pointer; user-select: none;">Nhớ tài khoản và mật khẩu</label>
+            </div>
+            <button type="button" id="btnLogin" class="btn-primary" style="width: 100%; margin-bottom: 16px; padding: 14px 0; font-size: 1.05rem;">Đăng Nhập</button>
+            <div style="display: flex; justify-content: center; font-size: 0.95rem; font-weight: 500;">
+                <a href="#" id="showForgotView" style="color: var(--primary); text-decoration: none;">Quên mật khẩu?</a>
+            </div>
+            <div style="margin: 24px 0; text-align: center; font-size: 0.9rem; color: #64748b; position: relative;">
+                <span style="background: white; padding: 0 10px; position: relative; z-index: 1;">Hoặc</span>
+                <hr style="position: absolute; top: 10px; left: 0; width: 100%; border: 0; border-top: 1px solid #e2e8f0; margin: 0; z-index: 0;">
+            </div>
+            <button type="button" id="btnGoogleLogin" style="width: 100%; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 12px 0; font-weight: 600; font-size: 1rem; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.222 0-9.653-3.342-11.124-7.481l-6.571 4.819C9.656 39.663 16.318 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                Google
+            </button>
+            <div style="margin-top: 24px; text-align: center; font-size: 0.95rem;">
+                <span style="color: #64748b;">Chưa có tài khoản? </span>
+                <a href="#" id="showRegisterView" style="color: var(--primary); font-weight: 600; text-decoration: none;">Đăng ký ngay</a>
+            </div>
+        </div>
+
+        <!-- REGISTER VIEW -->
+        <div id="register-view" style="display: none; transition: opacity 0.3s ease-in-out; opacity: 0;">
+            <h2 style="text-align: center; color: #0f172a; margin-top: 0; margin-bottom: 24px;">Đăng Ký Tài Khoản</h2>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="registerName" style="margin-bottom: 8px; display: block;">Tên hiển thị</label>
+                <input type="text" id="registerName" class="auth-input" placeholder="Nhập tên của bạn...">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="registerEmail" style="margin-bottom: 8px; display: block;">Email</label>
+                <input type="email" id="registerEmail" class="auth-input" placeholder="Nhập email của bạn...">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="registerPassword" style="margin-bottom: 8px; display: block;">Mật khẩu</label>
+                <div class="password-container">
+                    <input type="password" id="registerPassword" class="auth-input" placeholder="Tối thiểu 6 ký tự...">
+                    <button type="button" class="password-toggle" id="toggleRegisterPassword" title="Hiển thị mật khẩu">👁️</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="registerConfirmPassword" style="margin-bottom: 8px; display: block;">Nhập lại mật khẩu</label>
+                <div class="password-container">
+                    <input type="password" id="registerConfirmPassword" class="auth-input" placeholder="Nhập lại mật khẩu...">
+                    <button type="button" class="password-toggle" id="toggleRegisterConfirmPassword" title="Hiển thị mật khẩu">👁️</button>
+                </div>
+            </div>
+            <button type="button" id="btnRegister" class="btn-primary" style="width: 100%; margin-bottom: 16px; padding: 14px 0; font-size: 1.05rem;">Đăng Ký Tài Khoản</button>
+            <div style="margin-top: 24px; text-align: center; font-size: 0.95rem;">
+                <span style="color: #64748b;">Đã có tài khoản? </span>
+                <a href="#" id="showLoginViewFromRegister" style="color: var(--primary); font-weight: 600; text-decoration: none;">Quay lại đăng nhập</a>
+            </div>
+        </div>
+
+        <!-- FORGOT PASSWORD VIEW -->
+        <div id="forgot-password-view" style="display: none; transition: opacity 0.3s ease-in-out; opacity: 0;">
+            <h2 style="text-align: center; color: #0f172a; margin-top: 0; margin-bottom: 24px;">Khôi Phục Mật Khẩu</h2>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="forgotEmail" style="margin-bottom: 8px; display: block;">Email của bạn</label>
+                <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập email để nhận link khôi phục...">
+            </div>
+            <button type="button" id="btnSendReset" style="width: 100%; margin-bottom: 16px; padding: 14px 0; font-size: 1.05rem; background-color: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Gửi link khôi phục</button>
+            <div style="margin-top: 24px; text-align: center; font-size: 0.95rem;">
+                <a href="#" id="showLoginViewFromForgot" style="color: var(--primary); font-weight: 600; text-decoration: none;">Quay lại đăng nhập</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- APP SECTION -->
+    <div id="app-section" style="display: none; width: 100%; height: 100vh; flex-direction: column; background-color: #f8fafc; overflow: hidden;">
+        
+        <!-- HEADER -->
+        <header style="flex-shrink: 0; background: white; border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 12px 24px;">
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                
+                <!-- Left: Admin Toggle Button -->
+                <div id="headerLeftContainer" style="display: none; flex: 1;">
+                    <div style="position: relative;">
+                        <button id="adminToggleBtn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #fefce8; color: #b91c1c; border: 1px solid #fca5a5; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; width: max-content;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            BẢNG QUẢN TRỊ KHÁCH HÀNG
+                            <svg id="adminToggleIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+
+                        <!-- Admin Dropdown/Modal -->
+                        <div id="admin-panel" style="display: none; position: absolute; top: calc(100% + 8px); left: 0; width: 350px; background: white; border: 2px solid #ef4444; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 20px; z-index: 100; opacity: 0; transition: opacity 0.2s ease-in-out;">
+                            <h2 style="margin-top: 0; color: #b91c1c; border-bottom: 1px solid #fca5a5; padding-bottom: 12px; font-size: 1.1rem; text-align: center;">⚙️ Quản Trị Hệ Thống</h2>
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div class="form-group">
+                                    <label for="adminUserEmail" style="color: #991b1b; font-size: 0.9rem;">Nhập Email khách hàng cần xử lý</label>
+                                    <input type="text" id="adminUserEmail" placeholder="VD: khachhang@gmail.com" style="border-color: #fca5a5; background: white;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminPoints" style="color: #991b1b; font-size: 0.9rem;">Số điểm cần Cộng / Trừ</label>
+                                    <input type="number" id="adminPoints" placeholder="VD: 10 hoặc -5" style="border-color: #fca5a5; border-radius: 8px; padding: 10px 14px; border: 1px solid #fca5a5; font-size: 1rem; outline: none; background: white; font-family: inherit;">
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <button id="adminUpdateBtn" style="background-color: #059669; color: white; padding: 10px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;">
+                                        Cập nhật Điểm
+                                    </button>
+                                    <button id="adminResetBtn" style="background-color: #eab308; color: white; padding: 10px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;">
+                                        Gửi Email Reset Mật Khẩu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: Credit block -->
+                <div id="headerCenterContainer" style="flex: 1; display: flex; justify-content: flex-start; align-items: center;">
+                    <div style="background: #fef3c7; color: #b45309; padding: 8px 16px; border-radius: 9999px; font-weight: bold; border: 1px solid #fde68a; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;" onclick="openTopUpModal()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 1rem; display: flex; align-items: center; gap: 6px;"><span id="creditEmoji">💎</span> <span id="creditDisplay">0</span><span id="creditSuffix"> Điểm</span></span>
+                        <span id="topUpBadge" style="background: #f59e0b; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 0.85rem;">Nạp điểm</span>
+                    </div>
+                </div>
+
+                <!-- Right: User Info & Logout -->
+                <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.95rem;">
+                        <div style="background: #e0e7ff; border-radius: 50%; padding: 6px; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <span id="user-email" style="font-weight: bold; color: var(--primary);"></span>
+                    </div>
+                    <button id="btnLogout" style="background: #f1f5f9; color: #dc2626; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#fee2e2'" onmouseout="this.style.backgroundColor='#f1f5f9'">Đăng xuất</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT (Flexible columns) -->
+        <main style="width: 100%; display: flex; flex-direction: row; gap: 24px; padding: 24px; flex: 1; overflow: hidden; align-items: stretch;">
+            
+            <!-- LEFT COLUMN (Settings & Tools) -->
+            <div class="card" id="main-tool" style="width: 320px; flex: 0 0 320px; max-width: none; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow-y: auto; height: 100%; padding: 15px; display: flex; flex-direction: column;">
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px; flex-shrink: 0;">
+                    <h1 style="margin: 0; font-size: 1.2rem; text-align: center;">Sửa Thời Gian Taskbar</h1>
+                </div>
+                
+                <div class="upload-area" id="dropZone" onclick="document.getElementById('imageUpload').click()" style="padding: 12px 16px; min-height: unset; margin-bottom: 12px; flex-shrink: 0;">
+                    <label class="upload-label" style="gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <span style="font-size: 0.9rem;">Nhấn tải ảnh gốc hoặc kéo thả</span>
+                    </label>
+                    <input type="file" id="imageUpload" accept="image/png, image/jpeg">
+                    <div id="fileName" class="file-name hidden"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; flex-shrink: 0;">
+                    <label for="newTime">Nhập Giờ mới</label>
+                    <input type="text" id="newTime" placeholder="VD: 15:30">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 12px; flex-shrink: 0;">
+                    <label for="newDate">Nhập Ngày mới</label>
+                    <input type="text" id="newDate" placeholder="VD: 30/9/2025">
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 4px; flex-shrink: 0;">
+                    <button id="processBtn" class="btn-primary" disabled style="flex: 1; margin: 0; padding: 12px 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        <span style="font-size: 0.9rem;">Xử lý ảnh</span>
+                    </button>
+                    <button id="downloadBtn" class="btn-success" disabled style="flex: 1; margin: 0; padding: 12px 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span style="font-size: 0.9rem;">Tải ảnh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN (Preview Result) -->
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                <div class="preview-section hidden" id="previewContainer" style="margin: 0; width: 100%; height: 100%; padding: 0; background: transparent; box-shadow: none;">
+                    <div class="canvas-container" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; display: flex; justify-content: center; align-items: center; padding: 0;">
+                        <canvas id="canvas" style="max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; border-radius: 4px; transition: width 0.2s ease-out; display: block;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Vùng hướng dẫn hiển thị khi chưa upload ảnh -->
+                <div id="emptyStateContainer" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; background: white; color: #64748b; text-align: center; height: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" style="color: #94a3b8; margin-bottom: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                    <h3 style="margin: 0 0 8px 0; color: #334155; font-size: 1.25rem;">Khu vực kết quả</h3>
+                    <p style="margin: 0; max-width: 300px; font-size: 0.95rem;">Tải ảnh lên và nhập thông tin ở cột bên trái để xem trước kết quả tại đây.</p>
+                </div>
+            </div>
+        </main>
+
+    <!-- Nạp Điểm Modal -->
+    <div id="topUpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto;">
+            <button onclick="closeTopUpModal()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; padding: 0;">&times;</button>
+            <h2 style="margin-top: 0; text-align: center; color: #0f172a; margin-bottom: 20px;">Nạp Điểm Tự Động</h2>
+            
+            <p style="text-align: center; font-size: 0.9rem; color: #475569; margin-bottom: 20px;">
+                Chọn gói điểm để lấy mã VietQR rảnh tay<br>
+                <strong style="color: #dc2626; display: inline-block; margin-top: 6px;">Cách tính điểm (1 điểm = 1 lần tạo & tải ảnh mới)</strong>
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                <button class="btn-package" onclick="generateQR(25000, 5)" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; font-weight: bold; color: #0f172a; display: flex; justify-content: space-between; transition: all 0.2s; cursor: pointer;">
+                    <span>Gói Cơ Bản (5 Điểm)</span>
+                    <span style="color: var(--primary);">25.000đ</span>
+                </button>
+                <button class="btn-package" onclick="generateQR(50000, 10)" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; font-weight: bold; color: #0f172a; display: flex; justify-content: space-between; transition: all 0.2s; cursor: pointer;">
+                    <span>Gói Tiêu Chuẩn (10 Điểm)</span>
+                    <span style="color: var(--primary);">50.000đ</span>
+                </button>
+                <button class="btn-package" onclick="generateQR(100000, 20)" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; font-weight: bold; color: #0f172a; display: flex; justify-content: space-between; transition: all 0.2s; cursor: pointer;">
+                    <span>Gói Siêu Tốc (20 Điểm)</span>
+                    <span style="color: var(--primary);">100.000đ</span>
+                </button>
+            </div>
+
+            <div id="qrSection" class="hidden" style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <p style="font-weight: bold; color: #dc2626; margin-bottom: 8px;">Quét mã VietQR dưới đây để nạp</p>
+                <div style="background: #f1f5f9; padding: 16px; border-radius: 12px; display: inline-block;">
+                    <img id="qrImage" style="max-width: 100%; width: 250px; border-radius: 8px;" src="" alt="VietQR">
+                </div>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 12px;">Đang cấp điểm cho UID: <strong id="uidDisplay"></strong></p>
+            </div>
+            
+            <button onclick="closeTopUpModal()" style="width: 100%; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; padding: 12px; font-weight: 600; border-radius: 12px; margin-top: 16px; cursor: pointer; transition: all 0.2s;">
+                Đóng
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .btn-package:hover { border-color: var(--primary) !important; background: #eff6ff !important; }
+    </style>
+
+    <footer style="width: 100%; padding: 10px 0; border-top: 1px solid var(--border); background: white; margin-top: auto; flex-shrink: 0;">
+        <div style="max-width: 1400px; margin: 0 auto; text-align: center;">
+            <p style="font-weight: 600; color: #0f172a; margin: 0 0 2px 0; font-size: 14px; line-height: 1.2;">Hỗ trợ kỹ thuật & CSKH: Điện thoại: 0978.468.986 / Zalo: 0989.982.818</p>
+            <p style="margin: 0; color: #475569; font-size: 12px; line-height: 1.2;">Hệ thống duyệt điểm tự động. Vui lòng giữ nguyên nội dung chuyển khoản có chữ <strong>SEVQR</strong>. Nếu sau 3 phút chưa nhận được điểm, vui lòng liên hệ CSKH.</p>
+        </div>
+    </footer>
+    </div> <!-- END APP SECTION -->
+
+    <script>
+        // ==========================================
+        // THIẾT LẬP FIREBASE REAL
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXCHS_YEx5BcGf4kR5HOdh7qcYPN7SLBM",
+            authDomain: "app-sua-anh-canvas.firebaseapp.com",
+            projectId: "app-sua-anh-canvas",
+            storageBucket: "app-sua-anh-canvas.firebasestorage.app",
+            messagingSenderId: "17229169791",
+            appId: "1:17229169791:web:d58a5aebb0cd8cdfcd6b4a",
+            measurementId: "G-207JSK1BWB"
+        };
+        
+        // Khởi tạo Firebase (tránh cảnh báo báo lỗi nếu đã khởi tạo)
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const authSection = document.getElementById('auth-section');
+        const appSection = document.getElementById('app-section');
+        const adminPanel = document.getElementById('admin-panel');
+        const userEmailDisplay = document.getElementById('user-email');
+        const btnLogout = document.getElementById('btnLogout');
+        
+        // Auth Message Element
+        const authMessage = document.getElementById('auth-message');
+        let authMessageTimeout = null;
+
+        function showAuthMessage(message, isError = true) {
+            authMessage.textContent = message;
+            authMessage.className = isError ? 'error-msg' : 'success-msg';
+            authMessage.style.display = 'block';
+
+            if (authMessageTimeout) clearTimeout(authMessageTimeout);
+            authMessageTimeout = setTimeout(() => {
+                authMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function clearAuthMessageOnInput(inputElement) {
+            inputElement.addEventListener('input', () => {
+                authMessage.style.display = 'none';
+            });
+        }
+        
+        // Login View Elements
+        const loginView = document.getElementById('login-view');
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const btnLogin = document.getElementById('btnLogin');
+        const showRegisterViewBtn = document.getElementById('showRegisterView');
+        const showForgotViewBtn = document.getElementById('showForgotView');
+        clearAuthMessageOnInput(loginEmailInput);
+        clearAuthMessageOnInput(loginPasswordInput);
+        
+        // Register View Elements
+        const registerView = document.getElementById('register-view');
+        const registerNameInput = document.getElementById('registerName');
+        const registerEmailInput = document.getElementById('registerEmail');
+        const registerPasswordInput = document.getElementById('registerPassword');
+        const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
+        const btnRegister = document.getElementById('btnRegister');
+        const showLoginViewFromRegister = document.getElementById('showLoginViewFromRegister');
+        clearAuthMessageOnInput(registerNameInput);
+        clearAuthMessageOnInput(registerEmailInput);
+        clearAuthMessageOnInput(registerPasswordInput);
+        clearAuthMessageOnInput(registerConfirmPasswordInput);
+
+        // Forgot Password View Elements
+        const forgotPasswordView = document.getElementById('forgot-password-view');
+        const forgotEmailInput = document.getElementById('forgotEmail');
+        const btnSendReset = document.getElementById('btnSendReset');
+        const showLoginViewFromForgot = document.getElementById('showLoginViewFromForgot');
+        clearAuthMessageOnInput(forgotEmailInput);
+        
+        const btnGoogleLogin = document.getElementById('btnGoogleLogin');
+
+        const imageUpload = document.getElementById('imageUpload');
+        const fileNameDiv = document.getElementById('fileName');
+        const newTimeInput = document.getElementById('newTime');
+        const newDateInput = document.getElementById('newDate');
+        const processBtn = document.getElementById('processBtn');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const dropZone = document.getElementById('dropZone');
+
+        let originalImage = new Image();
+        
+        // Hệ thống điểm
+        let userCredits = 0;
+
+        // ==========================================
+        // AUTHENTICATION LOGIC
+        // ==========================================
+        const ADMIN_EMAIL = "admin@admin.com";
+        let currentUser = null;
+
+        // Toggle Views
+        function switchView(hideView, showView) {
+            authMessage.style.display = 'none'; // clear message on view change
+            hideView.style.opacity = '0';
+            setTimeout(() => {
+                hideView.style.display = 'none';
+                showView.style.display = 'block';
+                setTimeout(() => showView.style.opacity = '1', 50);
+            }, 300);
+        }
+
+        showRegisterViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView(loginView, registerView);
+        });
+
+        showLoginViewFromRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView(registerView, loginView);
+        });
+
+        showForgotViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView(loginView, forgotPasswordView);
+        });
+
+        showLoginViewFromForgot.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView(forgotPasswordView, loginView);
+        });
+
+        // Toggle Password Visibility functions
+        function setupPasswordToggle(toggleBtnId, inputId) {
+            const toggleBtn = document.getElementById(toggleBtnId);
+            const inputField = document.getElementById(inputId);
+            if (toggleBtn && inputField) {
+                toggleBtn.addEventListener('click', () => {
+                    const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    inputField.setAttribute('type', type);
+                });
+            }
+        }
+        setupPasswordToggle('togglePassword', 'loginPassword');
+        setupPasswordToggle('toggleRegisterPassword', 'registerPassword');
+        setupPasswordToggle('toggleRegisterConfirmPassword', 'registerConfirmPassword');
+
+        // Load Remember Me state
+        const savedEmail = localStorage.getItem('savedEmail');
+        const savedPassword = localStorage.getItem('savedPassword');
+        if (savedEmail && savedPassword) {
+            loginEmailInput.value = savedEmail;
+            loginPasswordInput.value = savedPassword;
+            document.getElementById('rememberMe').checked = true;
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            currentUser = user;
+            if (!user) {
+                // CHƯA ĐĂNG NHẬP
+                authSection.style.display = 'block';
+                appSection.style.display = 'none';
+            } else {
+                // ĐÃ ĐĂNG NHẬP
+                authSection.style.display = 'none';
+                appSection.style.display = 'flex';
+                
+                // Set default name initially
+                let displayNameToShow = user.displayName || user.email;
+                if (user.email === ADMIN_EMAIL) {
+                    displayNameToShow = "Hoàng Văn Đình Khoa";
+                }
+                userEmailDisplay.textContent = displayNameToShow;
+
+                // PHÂN QUYỀN CHẶT CHẼ
+                const adminDropdown = document.getElementById('admin-panel');
+                const headerLeftContainer = document.getElementById('headerLeftContainer');
+                const headerCenterContainer = document.getElementById('headerCenterContainer');
+                const creditSuffix = document.getElementById('creditSuffix');
+                const topUpBadge = document.getElementById('topUpBadge');
+                const creditEmoji = document.getElementById('creditEmoji');
+                
+                if (user.email === ADMIN_EMAIL) {
+                    // QUYỀN ADMIN
+                    headerLeftContainer.style.display = 'flex';
+                    headerCenterContainer.style.justifyContent = 'center';
+                    creditDisplay.textContent = "VIP";
+                    if(creditSuffix) creditSuffix.style.display = 'none';
+                    if(topUpBadge) topUpBadge.style.display = 'none';
+                    userCredits = 999999; // Set vô hạn để logic vẽ hình không bị chặn
+                } else {
+                    // QUYỀN KHÁCH
+                    headerLeftContainer.style.display = 'none';
+                    headerCenterContainer.style.justifyContent = 'flex-start';
+                    adminDropdown.style.display = 'none';
+                    adminDropdown.style.opacity = '0';
+                    creditDisplay.textContent = 'Đang tải...';
+                    if(creditSuffix) creditSuffix.style.display = 'inline';
+                    if(topUpBadge) topUpBadge.style.display = 'inline-block';
+                    
+                    try {
+                        // Đọc số dư từ Firestore
+                        const docRef = db.collection("users").doc(user.uid);
+                        
+                        // Sử dụng onSnapshot để realtime cập nhật khi có thay đổi điểm
+                        docRef.onSnapshot((docSnap) => {
+                            if (docSnap.exists) {
+                                const data = docSnap.data();
+                                userCredits = data.credits || 0;
+                                if (data.displayName) {
+                                    userEmailDisplay.textContent = data.displayName;
+                                }
+                                updateCreditDisplay();
+                            } else {
+                                // Nếu document chưa có, tạo mới
+                                const defaultName = user.displayName || user.email.split('@')[0];
+                                docRef.set({
+                                    email: user.email,
+                                    displayName: defaultName,
+                                    credits: 0,
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                }).then(() => {
+                                    userCredits = 0;
+                                    userEmailDisplay.textContent = defaultName;
+                                    updateCreditDisplay();
+                                }).catch(err => {
+                                    console.error("Lỗi tạo user info:", err);
+                                    creditDisplay.textContent = "0";
+                                });
+                            }
+                        }, (error) => {
+                            console.error("Lỗi lắng nghe điểm:", error);
+                            creditDisplay.textContent = "Lỗi điểm";
+                        });
+                    } catch(e) {
+                        console.error("Lỗi khi đọc điểm:", e);
+                        creditDisplay.textContent = "Lỗi dữ liệu";
+                    }
+                }
+            }
+        });
+
+        // Xử lý nút Đăng nhập
+        btnLogin.addEventListener('click', () => {
+            let email = loginEmailInput.value.trim();
+            let password = loginPasswordInput.value;
+            
+            if(!email || !password) {
+                showAuthMessage("Vui lòng nhập Email và Mật khẩu!", true);
+                return;
+            }
+
+            if (!email.includes('@')) {
+                email = email.toLowerCase() + '@admin.com';
+            }
+
+            if (email === 'admin@admin.com' && password === 'admin') {
+                password = 'admin' + '123'; // Đổi thành admin123 để đủ 6 ký tự
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    // Xử lý nhớ mật khẩu
+                    if (document.getElementById('rememberMe').checked) {
+                        localStorage.setItem('savedEmail', loginEmailInput.value.trim()); // Save whatever they typed
+                        localStorage.setItem('savedPassword', password);
+                    } else {
+                        localStorage.removeItem('savedEmail');
+                        localStorage.removeItem('savedPassword');
+                    }
+                })
+                .catch(err => {
+                    if ((err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') && email === 'admin@admin.com') {
+                        // Auto create admin account if not exists
+                        auth.createUserWithEmailAndPassword(email, password).then(async (userCredential) => {
+                            const user = userCredential.user;
+                            await db.collection("users").doc(user.uid).set({
+                                email: user.email,
+                                displayName: "Hoàng Văn Đình Khoa",
+                                credits: 0,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            // Login will automatically proceed via onAuthStateChanged
+                            if (document.getElementById('rememberMe').checked) {
+                                localStorage.setItem('savedEmail', loginEmailInput.value.trim());
+                                localStorage.setItem('savedPassword', password);
+                            } else {
+                                localStorage.removeItem('savedEmail');
+                                localStorage.removeItem('savedPassword');
+                            }
+                        }).catch(createErr => {
+                            if (createErr.code === 'auth/email-already-in-use') {
+                                showAuthMessage("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại!", true);
+                            } else {
+                                showAuthMessage("Không thể tạo tài khoản admin: " + createErr.message, true);
+                            }
+                        });
+                        return;
+                    }
+
+                    if (err.code === 'auth/api-key-not-valid' || err.message.includes('API key not valid')) {
+                        showAuthMessage("Thiếu cấu hình Firebase! Vui lòng cập nhật API Key thật vào biến firebaseConfig.", true);
+                    } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                        showAuthMessage("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại!", true);
+                    } else {
+                        console.error(err);
+                        showAuthMessage("Lỗi: " + (err.message || "Không thể đăng nhập."), true);
+                    }
+                });
+        });
+
+        // Xử lý nút Đăng ký
+        btnRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            let name = registerNameInput.value.trim();
+            let email = registerEmailInput.value.trim();
+            let password = registerPasswordInput.value;
+            let confirmPassword = registerConfirmPasswordInput.value;
+
+            if(!name || !email || !password || !confirmPassword) {
+                showAuthMessage("Vui lòng nhập đầy đủ thông tin để đăng ký!", true);
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAuthMessage("Mật khẩu nhập lại không khớp!", true);
+                return;
+            }
+
+            if (password.length < 6) {
+                showAuthMessage("Mật khẩu quá yếu! Vui lòng nhập ít nhất 6 ký tự.", true);
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    // Tạo ngay record cho user mới vào Firestore
+                    await db.collection("users").doc(user.uid).set({
+                        email: user.email,
+                        displayName: name,
+                        credits: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    showAuthMessage("Đăng ký thành công! Đang vào hệ thống...", false);
+                })
+                .catch(err => {
+                    if (err.code === 'auth/api-key-not-valid' || err.message.includes('API key not valid')) {
+                        showAuthMessage("Thiếu cấu hình Firebase! Vui lòng cập nhật API Key thật vào biến firebaseConfig.", true);
+                    } else if (err.code === 'auth/email-already-in-use') {
+                        showAuthMessage("Email đã tồn tại trong hệ thống. Vui lòng đăng nhập.", true);
+                    } else if (err.code === 'auth/weak-password') {
+                        showAuthMessage("Mật khẩu quá yếu! Vui lòng nhập ít nhất 6 ký tự.", true);
+                    } else if (err.code === 'auth/invalid-email') {
+                        showAuthMessage("Định dạng email không hợp lệ!", true);
+                    } else if (err.code === 'auth/invalid-credential') {
+                        showAuthMessage("Thông tin xác thực không hợp lệ!", true);
+                    } else {
+                        console.error(err);
+                        showAuthMessage("Lỗi đăng ký: " + (err.message || 'Lỗi không xác định.'), true);
+                    }
+                });
+        });
+
+        // Xử lý nút Quên mật khẩu
+        btnSendReset.addEventListener('click', (e) => {
+            e.preventDefault();
+            let emailReset = forgotEmailInput.value.trim();
+            
+            if (!emailReset) {
+                showAuthMessage("Vui lòng nhập Email để nhận link khôi phục!", true);
+                return;
+            }
+
+            auth.sendPasswordResetEmail(emailReset)
+                .then(() => {
+                    showAuthMessage("Đã gửi link khôi phục! Vui lòng kiểm tra hộp thư (kể cả Spam).", false);
+                    forgotEmailInput.value = '';
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (err.code === 'auth/api-key-not-valid' || err.message.includes('API key not valid')) {
+                        showAuthMessage("Thiếu cấu hình Firebase! Vui lòng cập nhật API Key thật vào biến firebaseConfig.", true);
+                    } else if (err.code === 'auth/invalid-email') {
+                        showAuthMessage("Định dạng email không hợp lệ!", true);
+                    } else if (err.code === 'auth/user-not-found') {
+                        showAuthMessage("Không tìm thấy tài khoản với email này.", true);
+                    } else {
+                        showAuthMessage("Lỗi: " + err.message, true);
+                    }
+                });
+        });
+
+        // Xử lý nút Đăng nhập bằng Google
+        btnGoogleLogin.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .catch(err => {
+                    if (err.code === 'auth/api-key-not-valid' || err.message.includes('API key not valid')) {
+                        showAuthMessage("Thiếu cấu hình Firebase! Vui lòng cập nhật API Key thật vào biến firebaseConfig.", true);
+                    } else if (err.code === 'auth/unauthorized-domain') {
+                        const currentDomain = window.location.hostname;
+                        showAuthMessage(`Tên miền "${currentDomain}" chưa được cấp phép trong Firebase Console.`, true);
+                        console.error(`Tên miền ${currentDomain} chưa được cấp phép. Bạn cần thêm tên miền này vào Firebase Console -> Authentication -> Settings -> Authorized domains.`);
+                    } else if (err.code === 'auth/popup-closed-by-user') {
+                        // User closed popup, don't show error message
+                    } else {
+                        console.error(err);
+                        showAuthMessage("Đăng nhập Google thất bại: " + (err.message || 'Lỗi không xác định.'), true);
+                    }
+                });
+        });
+
+        // Xử lý nút Đăng xuất
+        btnLogout.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // ==========================================
+        // UI TOGGLE LOGIC
+        // ==========================================
+        const adminToggleBtn = document.getElementById('adminToggleBtn');
+        const adminToggleIcon = document.getElementById('adminToggleIcon');
+        
+        adminToggleBtn.addEventListener('click', () => {
+            const isHidden = adminPanel.style.display === 'none';
+            if (isHidden) {
+                adminPanel.style.display = 'block';
+                // Trigger reflow to ensure transition works
+                void adminPanel.offsetWidth;
+                adminPanel.style.opacity = '1';
+                adminToggleIcon.style.transform = 'rotate(180deg)';
+                adminToggleBtn.style.backgroundColor = '#fca5a5';
+            } else {
+                adminPanel.style.opacity = '0';
+                adminToggleIcon.style.transform = 'rotate(0deg)';
+                adminToggleBtn.style.backgroundColor = '#fefce8';
+                setTimeout(() => {
+                    adminPanel.style.display = 'none';
+                }, 200); // Wait for transition
+            }
+        });
+
+        // Close admin panel if clicking outside
+        document.addEventListener('click', (e) => {
+            if (adminPanel.style.display === 'block' && 
+                !adminPanel.contains(e.target) && 
+                !adminToggleBtn.contains(e.target)) {
+                adminPanel.style.opacity = '0';
+                adminToggleIcon.style.transform = 'rotate(0deg)';
+                adminToggleBtn.style.backgroundColor = '#fefce8';
+                setTimeout(() => {
+                    adminPanel.style.display = 'none';
+                }, 200);
+            }
+        });
+
+        // ==========================================
+        // KHU VỰC ADMIN
+        // ==========================================
+        
+        const adminUserEmail = document.getElementById('adminUserEmail');
+        const adminPoints = document.getElementById('adminPoints');
+        const adminUpdateBtn = document.getElementById('adminUpdateBtn');
+        const adminResetBtn = document.getElementById('adminResetBtn');
+
+        // Logic Nút Cập nhật Điểm
+        adminUpdateBtn.addEventListener('click', async () => {
+            const email = adminUserEmail.value.trim();
+            const pointsToModify = parseInt(adminPoints.value);
+
+            if (!email) {
+                alert("Vui lòng nhập Email khách hàng cần xử lý!");
+                return;
+            }
+            if (isNaN(pointsToModify)) {
+                alert("Vui lòng nhập số điểm hợp lệ cần Cộng / Trừ!");
+                return;
+            }
+
+            try {
+                const usersRef = db.collection("users");
+                const querySnapshot = await usersRef.where("email", "==", email).get();
+
+                if (querySnapshot.empty) {
+                    alert("Không tìm thấy email khách hàng trong hệ thống");
+                    return;
+                }
+
+                querySnapshot.forEach(async (docSnap) => {
+                    await docSnap.ref.update({
+                        credits: firebase.firestore.FieldValue.increment(pointsToModify)
+                    });
+                });
+
+                const mathSign = pointsToModify > 0 ? '+' : '';
+                alert(`Đã cập nhật ${mathSign}${pointsToModify} điểm thành công cho khách có email: ${email}`);
+                
+                // Xóa input sau khi thành công
+                adminUserEmail.value = '';
+                adminPoints.value = '';
+
+            } catch (error) {
+                alert("Lỗi khi cập nhật điểm: " + error.message);
+                console.error(error);
+            }
+        });
+
+        // Logic Nút Reset Mật Khẩu
+        adminResetBtn.addEventListener('click', async () => {
+            const email = adminUserEmail.value.trim();
+            if (!email) {
+                alert("Vui lòng nhập Email khách hàng cần xử lý!");
+                return;
+            }
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert(`Đã gửi link reset mật khẩu vào email của khách: ${email}`);
+            } catch (error) {
+                alert("Lỗi khi gửi email reset mật khẩu: " + error.message);
+                console.error(error);
+            }
+        });
+        // ==========================================
+        
+        const creditDisplay = document.getElementById('creditDisplay');
+        const topUpModal = document.getElementById('topUpModal');
+        const qrSection = document.getElementById('qrSection');
+        const qrImage = document.getElementById('qrImage');
+        const uidDisplay = document.getElementById('uidDisplay');
+        
+        function updateCreditDisplay() {
+            creditDisplay.textContent = userCredits;
+        }
+
+        function openTopUpModal() {
+            if (currentUser && currentUser.email === ADMIN_EMAIL) return;
+            topUpModal.style.display = 'flex';
+            qrSection.classList.add('hidden');
+        }
+
+        function closeTopUpModal() {
+            topUpModal.style.display = 'none';
+        }
+
+        function generateQR(amount, points) {
+            // Thông tin ngân hàng của bạn
+            const bankId = "ICB"; // VietinBank
+            const accountNo = "101879516096";
+            const accountName = "HOANG VAN DINH KHOA";
+            const currentUserId = currentUser ? currentUser.uid.substring(0, 6).toUpperCase() : "";
+            const addInfo = `SEVQR NAPDIEM ${currentUserId}`;
+            
+            // Xây dựng link VietQR
+            const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(accountName)}`;
+            
+            qrImage.src = qrUrl;
+            uidDisplay.textContent = currentUserId;
+            qrSection.classList.remove('hidden');
+            
+            // Mockup: Mô phỏng nạp tiền tự động thành công sau 5 giây (Bỏ comment nếu muốn test chức năng nạp tiền tự động trên giao diện)
+            /*
+            setTimeout(() => {
+                if (topUpModal.style.display !== 'none') {
+                    userCredits += points;
+                    updateCreditDisplay();
+                    alert(`Nạp thẻ thành công! Bạn được cộng ${points} điểm.`);
+                    closeTopUpModal();
+                }
+            }, 5000);
+            */
+        }
+
+        // Xử lý kéo thả ảnh
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.backgroundColor = '#e2e8f0';
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.backgroundColor = '#f1f5f9';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.backgroundColor = '#f1f5f9';
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        imageUpload.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.match('image.*')) {
+                alert("Vui lòng chọn file hình ảnh (PNG hoặc JPG).");
+                return;
+            }
+
+            fileNameDiv.textContent = `Đã chọn: ${file.name}`;
+            fileNameDiv.classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage.onload = function() {
+                    // Kích hoạt nút xử lý
+                    processBtn.disabled = false;
+                    
+                    // Khởi tạo kích thước canvas bằng kích thước thật của ảnh (Tỉ lệ 1:1)
+                    canvas.width = originalImage.width;
+                    canvas.height = originalImage.height;
+                    
+                    // Vẽ ảnh gốc lên để user xem trước (chưa xử lý)
+                    ctx.drawImage(originalImage, 0, 0);
+                    previewContainer.classList.remove('hidden');
+                    downloadBtn.disabled = false;
+                    const emptyStateContainer = document.getElementById('emptyStateContainer');
+                    if (emptyStateContainer) {
+                        emptyStateContainer.style.display = 'none';
+                    }
+                }
+                originalImage.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        processBtn.addEventListener('click', async function() {
+            if (!originalImage.src) return;
+
+            const gioMoi = newTimeInput.value || "15:30";
+            const ngayMoi = newDateInput.value || "30/9/2025";
+
+            // Bước 1: Vẽ lại ảnh gốc với kích thước 1:1 để reset state Canvas
+            ctx.drawImage(originalImage, 0, 0);
+
+            // ==========================================
+            // KỸ THUẬT "TRÍCH XUẤT MÀU NỀN TỰ ĐỘNG" (AUTO COLOR PICKING)
+            // ==========================================
+            const cw = canvas.width;
+            const ch = canvas.height;
+
+            // 1. THIẾT LẬP BIẾN GỐC (Tự động nội suy chiều cao Taskbar)
+            // Thanh taskbar Windows 11 thường cao khoảng 4.6% chiều cao màn hình
+            const taskbarH = Math.round(ch * 0.046);
+
+            // 2. XÓA CHỮ VÀ ICON CŨ BẰNG KỸ THUẬT QUÉT MÀU NỀN TỪ VÙNG TRỐNG
+            // Lấy mẫu từ một vùng an toàn ngoài khay hệ thống, tìm màu nền rồi ghi đè 100% vùng đồng hồ cũ,
+            // đảm bảo KHÔNG HỀ CÒN vệt sọc ngang hoặc vòng tròn mờ (lấp lánh) viền icon cũ.
+            
+            // Chiều rộng khối cần xoá: taskbarH * 2.4 - vừa đủ che đồng hồ + icon thông báo,
+            // nhưng DỪNG LẠI trước cụm Âm lượng / Mạng wifi.
+            const rectWidth = Math.round(taskbarH * 2.4); 
+            const startX = Math.max(0, cw - rectWidth);
+            
+            // XÁC ĐỊNH MÀU NỀN CHUẨN CỦA TỪNG DÒNG (ROW-BY-ROW)
+            // Quét khu vực rộng phía bên trái các icon khay hệ thống (nơi chắc chắn là nền trơn).
+            const sampleEndX = Math.floor(cw - taskbarH * 3.5); 
+            const sampleStartX = Math.max(0, Math.floor(sampleEndX - taskbarH * 4.0));
+            const sampleW = Math.max(10, sampleEndX - sampleStartX);
+            
+            const sampleData = ctx.getImageData(sampleStartX, ch - taskbarH, sampleW, taskbarH);
+            let totalBrightness = 0; 
+            
+            for (let row = 0; row < taskbarH; row++) {
+                const colorMap = {};
+                let maxCount = 0;
+                let bgR = 0, bgG = 0, bgB = 0, bgA = 255;
+                
+                // Thu thập màu chủ đạo của dòng này trên vùng lấy mẫu
+                for (let col = 0; col < sampleW; col++) {
+                    const idx = (row * sampleW + col) * 4;
+                    const r = sampleData.data[idx];
+                    const g = sampleData.data[idx+1];
+                    const b = sampleData.data[idx+2];
+                    const a = sampleData.data[idx+3];
+                    
+                    if (a < 50) continue; 
+
+                    // Lượng tử hoá (nhóm các pixel có màu gần giống nhau)
+                    const qr = Math.floor(r / 5);
+                    const qg = Math.floor(g / 5);
+                    const qb = Math.floor(b / 5);
+                    const key = `${qr},${qg},${qb}`;
+                    
+                    colorMap[key] = (colorMap[key] || 0) + 1;
+                    
+                    if (colorMap[key] > maxCount) {
+                        maxCount = colorMap[key];
+                        bgR = r; bgG = g; bgB = b; bgA = a;
+                    }
+                }
+                
+                // TÔ ĐÈ LÊN ĐỒNG HỒ: Dùng 100% màu nền để ghi đè (xoá sạch bong, không dùng dính viền)
+                ctx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${bgA/255})`;
+                ctx.fillRect(startX, ch - taskbarH + row, rectWidth, 1);
+                
+                totalBrightness += (bgR * 0.299 + bgG * 0.587 + bgB * 0.114);
+            }
+
+            // Tính trung bình độ sáng nền (>128 là nền sáng, <=128 là nền tối)
+            const avgBrightness = totalBrightness / taskbarH;
+            const textColor = avgBrightness > 128 ? "#000000" : "#ffffff";
+
+            // 3. CHÈN NGÀY GIỜ MỚI
+            // Tự động tính tỷ lệ cỡ chữ (khoảng 32% height của taskbar)
+            const fontSizePx = Math.round(taskbarH * 0.32);
+            ctx.font = `${fontSizePx}px 'Segoe UI', -apple-system, sans-serif`;
+            ctx.fillStyle = textColor; 
+            ctx.textAlign = "right";
+            ctx.textBaseline = "alphabetic";
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
+            // Vị trí X mép phải
+            const textX = Math.round(cw - (taskbarH * 0.4));
+            // Vị trí Y
+            const timeY = ch - (taskbarH * 0.65);
+            const dateY = ch - (taskbarH * 0.25);
+
+            // Viết Dòng 1: Giờ mới
+            ctx.fillText(gioMoi, textX, timeY);
+            
+            // Viết Dòng 2: Ngày mới
+            ctx.fillText(ngayMoi, textX, dateY);
+            
+            // Scroll nhẹ xuống để người dùng thấy ảnh
+            previewContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+
+        // Xử lý tải ảnh xuống
+        downloadBtn.addEventListener('click', async function() {
+            // Kiểm tra phân quyền Admin
+            const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+            
+            if (!isAdmin) {
+                // Kiểm tra điểm của khách
+                if (userCredits <= 0) {
+                    alert("Vui lòng nạp thêm điểm để có thể tải ảnh xuống.");
+                    openTopUpModal();
+                    return; // Chặn việc tải ảnh
+                }
+                
+                // Trừ 1 điểm trên Firestore
+                try {
+                    const docRef = db.collection("users").doc(currentUser.uid);
+                    await docRef.update({
+                        credits: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    userCredits--;
+                    updateCreditDisplay();
+                    alert("Đã trừ 1 điểm phí tải ảnh.");
+                } catch(e) {
+                    console.error(e);
+                    alert("Đã có lỗi xảy ra khi trừ điểm. Vui lòng thử lại!");
+                    return;
+                }
+            }
+
+            // Lấy dữ liệu Canvas định dạng ảnh PNG chất lượng cao
+            const dataURL = canvas.toDataURL('image/png', 1.0);
+            
+            // Lấy thời gian và ngày đã nhập để đặt tên file
+            const gioMoi = newTimeInput.value || "15:30";
+            const ngayMoi = newDateInput.value || "30/9/2025";
+            const timeFormat = gioMoi.replace(/:/g, 'h').replace(/[^a-zA-Z0-9]/g, '');
+            const dateFormat = ngayMoi.replace(/\//g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+            const fileName = `${timeFormat}-${dateFormat}.png`;
+            
+            // Tạo link ảo và click
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        
+
+        // ==========================================
+        // CƠ CHẾ GOOGLE GEMINI API ROTATION (AUTO FALLBACK)
+        // Khi người dùng có nhu cầu gọi AI (Ví dụ: Tự động trích xuất giấy tờ, đọc giờ, ...)
+        // ==========================================
+        const GEMINI_API_KEYS = [
+            'AIzaSyAz7tBBhmWQ8nzRDPLU9lK6IkOV0AZIKDg',
+            'AIzaSyBZ7HYd1I4jfOZQXjFuL4w1eYC_a-7DhZE'
+        ];
+        let currentKeyIndex = 0;
+
+        // Quản lý việc gọi API Gemini hỗ trợ cơ chế xoay vòng Key khi Lỗi/Hết Quota
+        window.callGeminiAPI = async function(model, payload) {
+            while (currentKeyIndex < GEMINI_API_KEYS.length) {
+                const activeKey = GEMINI_API_KEYS[currentKeyIndex];
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Nếu thành công, trả về data luôn
+                    if (response.ok) {
+                        return await response.json();
+                    }
+
+                    const errorData = await response.json();
+                    const errMsg = errorData?.error?.message?.toLowerCase() || '';
+
+                    // Kiểm tra lỗi 429 Too Many Requests, 503, Hoặc hết Quota
+                    if (response.status === 429 || response.status === 503 || errMsg.includes('quota') || errMsg.includes('resource exhausted')) {
+                        currentKeyIndex++;
+                        if (currentKeyIndex < GEMINI_API_KEYS.length) {
+                             console.log(`Đã chuyển sang Key ${currentKeyIndex + 1}`);
+                             // Dừng lại chút ít trước khi gọi lại (tránh block spike)
+                             await new Promise(r => setTimeout(r, 1000));
+                             continue; // Vòng lặp sẽ gọi lại API bằng key mới (Retry ngầm)
+                        }
+                    }
+
+                    // Nếu các lỗi khác (ví dụ: 400 Bad request), ném ra luôn
+                    throw new Error(`Gemini API Error: ${response.status} - ${errMsg}`);
+
+                } catch (error) {
+                    // Lỗi mạng hoặc lỗi do throw ở trên
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        currentKeyIndex++;
+                        if (currentKeyIndex < GEMINI_API_KEYS.length) {
+                             console.log(`Lỗi mạng. Đã chuyển sang Key ${currentKeyIndex + 1}`);
+                             continue; 
+                        }
+                    } else if (!error.message.includes('API Error')) {
+                         console.error("Lỗi khi kết nối API:", error);
+                    } else {
+                         throw error;
+                    }
+                }
+            }
+
+            // Đã thử hết tất cả các key
+            alert("Hệ thống đang quá tải, vui lòng thử lại sau ít phút!");
+            throw new Error("Đã thử hết tất cả các API Key dự phòng nhưng đều thất bại.");
+        };
+    </script>
+</body>
+</html>
